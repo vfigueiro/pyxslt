@@ -10,7 +10,10 @@ from itertools import *
 # parameters.
 #
 
-def function(minargs, maxargs, implicit=False, first=False, convert=None, namespaceUri=None):
+
+def function(
+    minargs, maxargs, implicit=False, first=False, convert=None, namespaceUri=None
+):
     """Function decorator.
 
     minargs -- Minimum number of arguments taken by the function.
@@ -25,8 +28,7 @@ def function(minargs, maxargs, implicit=False, first=False, convert=None, namesp
         def new_f(node, pos, size, context, *args):
             if len(args) < new_f.minargs:
                 raise XPathTypeError, 'too few arguments for "%s()"' % new_f.__name__
-            if (new_f.maxargs is not None and
-                len(args) > new_f.maxargs):
+            if new_f.maxargs is not None and len(args) > new_f.maxargs:
                 raise XPathTypeError, 'too many arguments for "%s()"' % new_f.__name__
 
             if implicit and len(args) == 0:
@@ -66,19 +68,24 @@ def function(minargs, maxargs, implicit=False, first=False, convert=None, namesp
 
     return decorator
 
+
 # Node Set Functions
+
 
 @function(0, 0)
 def f_last(node, pos, size, context):
     return size
 
+
 @function(0, 0)
 def f_position(node, pos, size, context):
     return pos
 
+
 @function(1, 1, convert=nodeset)
 def f_count(node, pos, size, context, nodes):
     return len(nodes)
+
 
 @function(1, 1)
 def f_id(node, pos, size, context, arg):
@@ -90,22 +97,27 @@ def f_id(node, pos, size, context, arg):
         node = node.ownerDocument
     return list(filter(None, (node.getElementById(id) for id in ids)))
 
+
 @function(0, 1, implicit=True, first=True)
 def f_local_name(node, pos, size, context, argnode):
     if argnode is None:
         return ''
-    if (argnode.nodeType == argnode.ELEMENT_NODE or
-        argnode.nodeType == argnode.ATTRIBUTE_NODE):
+    if (
+        argnode.nodeType == argnode.ELEMENT_NODE
+        or argnode.nodeType == argnode.ATTRIBUTE_NODE
+    ):
         return argnode.localName
     elif argnode.nodeType == argnode.PROCESSING_INSTRUCTION_NODE:
         return argnode.target
     return ''
+
 
 @function(0, 1, implicit=True, first=True)
 def f_namespace_uri(node, pos, size, context, argnode):
     if argnode is None:
         return ''
     return argnode.namespaceURI
+
 
 @function(0, 1, implicit=True, first=True)
 def f_name(node, pos, size, context, argnode):
@@ -119,7 +131,9 @@ def f_name(node, pos, size, context, argnode):
         return argnode.target
     return ''
 
+
 # String Functions
+
 
 @function(0, 1, implicit=True)
 def f_string(node, pos, size, context, v):
@@ -136,38 +150,44 @@ def f_string(node, pos, size, context, v):
             return u'-Infinity'
         elif str(v) == 'nan':
             return u'NaN'
-        elif int(v) == v and v <= 0xffffffff:
+        elif int(v) == v and v <= 0xFFFFFFFF:
             v = int(v)
         return unicode(v)
     elif booleanp(v):
         return u'true' if v else u'false'
     return v
 
+
 @function(1, None, convert='string')
 def f_concat(node, pos, size, context, *args):
     return ''.join((x for x in args))
+
 
 @function(2, 2, convert='string')
 def f_starts_with(node, pos, size, context, a, b):
     return a.startswith(b)
 
+
 @function(2, 2, convert='string')
 def f_contains(node, pos, size, context, a, b):
     return b in a
 
+
 @function(2, 2, convert='string')
 def f_substring_before(node, pos, size, context, a, b):
     try:
-        return a[0:a.index(b)]
+        return a[0 : a.index(b)]
     except ValueError:
         return ''
+
 
 @function(2, 2, convert='string')
 def f_substring_after(node, pos, size, context, a, b):
     try:
-        return a[a.index(b)+len(b):]
+        return a[a.index(b) + len(b) :]
     except ValueError:
         return ''
+
 
 @function(2, 3)
 def f_substring(node, pos, size, context, s, start, count=None):
@@ -185,7 +205,7 @@ def f_substring(node, pos, size, context, s, start, count=None):
             # Catch NaN
             return ''
         if end > len(s):
-            end = len(s)+1
+            end = len(s) + 1
 
     if start < 1:
         start = 1
@@ -193,15 +213,18 @@ def f_substring(node, pos, size, context, s, start, count=None):
         return ''
     if end <= start:
         return ''
-    return s[int(start)-1:int(end)-1]
+    return s[int(start) - 1 : int(end) - 1]
+
 
 @function(0, 1, implicit=True, convert='string')
 def f_string_length(node, pos, size, context, s):
     return len(s)
 
+
 @function(0, 1, implicit=True, convert='string')
 def f_normalize_space(node, pos, size, context, s):
     return re.sub(r'\s+', ' ', s.strip())
+
 
 @function(3, 3, convert='string')
 def f_translate(node, pos, size, context, s, source, target):
@@ -215,13 +238,15 @@ def f_translate(node, pos, size, context, s, source, target):
         if schar not in table:
             table[schar] = tchar
     if len(source) > len(target):
-        for schar in source[len(target):]:
+        for schar in source[len(target) :]:
             schar = ord(schar)
             if schar not in table:
                 table[schar] = None
     return s.translate(table)
 
+
 # Boolean functions
+
 
 @function(1, 1)
 def f_boolean(node, pos, size, context, v):
@@ -237,17 +262,21 @@ def f_boolean(node, pos, size, context, v):
 
     return v
 
+
 @function(1, 1, convert='boolean')
 def f_not(node, pos, size, context, b):
     return not b
+
 
 @function(0, 0)
 def f_true(node, pos, size, context):
     return True
 
+
 @function(0, 0)
 def f_false(node, pos, size, context):
     return False
+
 
 @function(1, 1, convert='string')
 def f_lang(node, pos, size, context, s):
@@ -260,7 +289,9 @@ def f_lang(node, pos, size, context, s):
             break
     return False
 
+
 # Number functions
+
 
 @function(0, 1, implicit=True)
 def f_number(node, pos, size, context, v):
@@ -273,17 +304,21 @@ def f_number(node, pos, size, context, v):
     except ValueError:
         return float('NaN')
 
+
 @function(1, 1, convert=nodeset)
 def f_sum(node, pos, size, context, nodes):
     return sum((number(string_value(x), context) for x in nodes))
+
 
 @function(1, 1, convert='number')
 def f_floor(node, pos, size, context, n):
     return math.floor(n)
 
+
 @function(1, 1, convert='number')
 def f_ceiling(node, pos, size, context, n):
     return math.ceil(n)
+
 
 @function(1, 1, convert='number')
 def f_round(node, pos, size, context, n):

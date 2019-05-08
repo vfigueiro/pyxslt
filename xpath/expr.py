@@ -14,6 +14,7 @@ from axes import *
 # Data model functions.
 #
 
+
 def document_order(node):
     """Compute a document order value for the node.
 
@@ -37,7 +38,7 @@ def document_order(node):
 
     # The document root (hopefully): []
     if node.parentNode is None:
-        return [hash(node)] # set some order for different documents
+        return [hash(node)]  # set some order for different documents
 
     # Determine which child this is of its parent.
     sibpos = 0
@@ -51,6 +52,7 @@ def document_order(node):
     order.append(sibpos)
     return order
 
+
 #
 # Internally, we use the following representations:
 #       nodeset - list of DOM tree nodes in document order
@@ -58,6 +60,7 @@ def document_order(node):
 #       boolean - bool
 #       number  - int or float
 #
+
 
 class Expr(object):
     """Abstract base class for XPath expressions."""
@@ -72,6 +75,7 @@ class Expr(object):
 
         """
 
+
 class BinaryOperatorExpr(Expr):
     """Base class for all binary operators."""
 
@@ -82,40 +86,48 @@ class BinaryOperatorExpr(Expr):
 
     def evaluate(self, node, pos, size, context):
         # Subclasses either override evaluate() or implement operate().
-        return self.operate(self.left.evaluate(node, pos, size, context),
-                            self.right.evaluate(node, pos, size, context))
+        return self.operate(
+            self.left.evaluate(node, pos, size, context),
+            self.right.evaluate(node, pos, size, context),
+        )
 
     def __str__(self):
         return '(%s %s %s)' % (self.left, self.op, self.right)
+
 
 class AndExpr(BinaryOperatorExpr):
     """<x> and <y>"""
 
     def evaluate(self, node, pos, size, context):
-        evaluateOp = lambda x: invoke('boolean', node, pos, size, context, x.evaluate(node, pos, size, context))
+        evaluateOp = lambda x: invoke(
+            'boolean', node, pos, size, context, x.evaluate(node, pos, size, context)
+        )
         # Note that XPath boolean operations short-circuit.
-        return (evaluateOp(self.left) and
-                evaluateOp(self.right))
+        return evaluateOp(self.left) and evaluateOp(self.right)
+
 
 class OrExpr(BinaryOperatorExpr):
     """<x> or <y>"""
 
     def evaluate(self, node, pos, size, context):
-        evaluateOp = lambda x: invoke('boolean', node, pos, size, context, x.evaluate(node, pos, size, context))
+        evaluateOp = lambda x: invoke(
+            'boolean', node, pos, size, context, x.evaluate(node, pos, size, context)
+        )
 
         # Note that XPath boolean operations short-circuit.
-        return (evaluateOp(self.left) or evaluateOp(self.right))
+        return evaluateOp(self.left) or evaluateOp(self.right)
+
 
 class EqualityExpr(BinaryOperatorExpr):
     """<x> = <y>, <x> != <y>, etc."""
 
     operators = {
-        '='  : operator.eq,
-        '!=' : operator.ne,
-        '<=' : operator.le,
-        '<'  : operator.lt,
-        '>=' : operator.ge,
-        '>'  : operator.gt,
+        '=': operator.eq,
+        '!=': operator.ne,
+        '<=': operator.le,
+        '<': operator.lt,
+        '>=': operator.ge,
+        '>': operator.gt,
     }
 
     def evaluate(self, node, pos, size, context):
@@ -147,8 +159,9 @@ class EqualityExpr(BinaryOperatorExpr):
         else:
             convert = 'number'
 
-        a, b = map(lambda x: invoke(convert, node, pos, size, context, x), (a,b))
+        a, b = map(lambda x: invoke(convert, node, pos, size, context, x), (a, b))
         return self.operators[self.op](a, b)
+
 
 def divop(x, y):
     try:
@@ -160,21 +173,25 @@ def divop(x, y):
             return float('-inf')
         return float('inf')
 
+
 class ArithmeticalExpr(BinaryOperatorExpr):
     """<x> + <y>, <x> - <y>, etc."""
 
     # Note that we must use math.fmod for the correct modulo semantics.
     operators = {
-        '+'   : operator.add,
-        '-'   : operator.sub,
-        '*'   : operator.mul,
-        'div' : divop,
-        'mod' : math.fmod
+        '+': operator.add,
+        '-': operator.sub,
+        '*': operator.mul,
+        'div': divop,
+        'mod': math.fmod,
     }
 
     def evaluate(self, node, pos, size, context):
-        evaluateOp = lambda x: invoke('number', node, pos, size, context, x.evaluate(node, pos, size, context))
+        evaluateOp = lambda x: invoke(
+            'number', node, pos, size, context, x.evaluate(node, pos, size, context)
+        )
         return self.operators[self.op](evaluateOp(self.left), evaluateOp(self.right))
+
 
 class UnionExpr(BinaryOperatorExpr):
     """<x> | <y>"""
@@ -185,6 +202,7 @@ class UnionExpr(BinaryOperatorExpr):
 
         # Need to sort the result to preserve document order.
         return sorted(set(chain(a, b)), key=document_order)
+
 
 class NegationExpr(Expr):
     """- <x>"""
@@ -197,6 +215,7 @@ class NegationExpr(Expr):
 
     def __str__(self):
         return '(-%s)' % self.expr
+
 
 class LiteralExpr(Expr):
     """Literals--either numbers or strings."""
@@ -214,6 +233,7 @@ class LiteralExpr(Expr):
             else:
                 return "'%s'" % self.literal
         return unicode(self.literal)
+
 
 class VariableReference(Expr):
     """Variable references."""
@@ -240,6 +260,7 @@ class VariableReference(Expr):
             return '$%s' % self.name
         else:
             return '$%s:%s' % (self.prefix, self.name)
+
 
 class Function(Expr):
     """Functions."""
@@ -273,6 +294,7 @@ class Function(Expr):
     def __str__(self):
         return '%s(%s)' % (self.name, ', '.join((str(x) for x in self.args)))
 
+
 def merge_into_nodeset(target, source):
     """Place all the nodes from the source node-set into the target
     node-set, preserving document order.  Both node-sets must be in
@@ -298,6 +320,7 @@ def merge_into_nodeset(target, source):
         target.extend(source)
         target.sort(key=document_order)
 
+
 class AbsolutePathExpr(Expr):
     """Absolute location paths."""
 
@@ -313,6 +336,7 @@ class AbsolutePathExpr(Expr):
 
     def __str__(self):
         return '/%s' % (self.path or '')
+
 
 class PathExpr(Expr):
     """Location path expressions."""
@@ -334,7 +358,7 @@ class PathExpr(Expr):
         for step in self.steps[1:]:
             aggregate = []
             for i in xrange(len(result)):
-                nodes = step.evaluate(result[i], i+1, len(result), context)
+                nodes = step.evaluate(result[i], i + 1, len(result), context)
                 if not nodesetp(nodes):
                     raise XPathTypeError("path step is not a node-set")
                 merge_into_nodeset(aggregate, nodes)
@@ -345,6 +369,7 @@ class PathExpr(Expr):
     def __str__(self):
         return '/'.join((str(s) for s in self.steps))
 
+
 class PredicateList(Expr):
     """A list of predicates.
 
@@ -352,6 +377,7 @@ class PredicateList(Expr):
     filtered by the predicates.
 
     """
+
     def __init__(self, expr, predicates, axis='child'):
         self.predicates = predicates
         self.expr = expr
@@ -391,6 +417,7 @@ class PredicateList(Expr):
             s = '(%s)' % s
         return s + ''.join(('[%s]' % x for x in self.predicates))
 
+
 class AxisStep(Expr):
     """One step in a location path expression."""
 
@@ -414,15 +441,18 @@ class AxisStep(Expr):
     def __str__(self):
         return '%s::%s' % (self.axis.__name__, self.test)
 
+
 #
 # Node tests.
 #
+
 
 class Test(object):
     """Abstract base class for node tests."""
 
     def match(self, node, axis, context):
         """Return True if 'node' matches the test along 'axis'."""
+
 
 class NameTest(object):
     def __init__(self, prefix, localpart):
@@ -457,13 +487,15 @@ class NameTest(object):
         else:
             return self.localName
 
+
 class PITest(object):
     def __init__(self, name=None):
         self.name = name
 
     def match(self, node, axis, context):
-        return (node.nodeType == node.PROCESSING_INSTRUCTION_NODE and
-                (self.name is None or node.target == self.name))
+        return node.nodeType == node.PROCESSING_INSTRUCTION_NODE and (
+            self.name is None or node.target == self.name
+        )
 
     def __str__(self):
         if self.name is None:
@@ -474,6 +506,7 @@ class PITest(object):
             name = "'%s'" % self.name
         return 'processing-instruction(%s)' % name
 
+
 class CommentTest(object):
     def match(self, node, axis, context):
         return node.nodeType == node.COMMENT_NODE
@@ -481,12 +514,14 @@ class CommentTest(object):
     def __str__(self):
         return 'comment()'
 
+
 class TextTest(object):
     def match(self, node, axis, context):
         return node.nodeType == node.TEXT_NODE
 
     def __str__(self):
         return 'text()'
+
 
 class AnyKindTest(object):
     def match(self, node, axis, context):
