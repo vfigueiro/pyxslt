@@ -1,8 +1,8 @@
 import xpath.expr, xpath.parser
 import xpath.yappsrt, xpath.exceptions
 import tools
-		
-		
+
+
 class XPathBase(object):
 	_max_cache = 100
 	_cache = {}
@@ -10,11 +10,11 @@ class XPathBase(object):
 	def __init__(self, expr, useCache=True):
 		"""Init docs.
 		"""
-		
+
 		if isinstance(expr, xpath.expr.Expr):
 			self.expr = expr
 			return
-			
+
 		if useCache:
 			self.expr = type(self).get(expr)
 		else:
@@ -24,15 +24,15 @@ class XPathBase(object):
 	def get(cls, s):
 		if isinstance(s, xpath.expr.Expr):
 			return s
-		
+
 		if s not in cls._cache:
 			if len(cls._cache) >= cls._max_cache:
 				del cls._cache[0:cls._max_cache/2]
-				
+
 			cls._cache[s] = cls.compile(s)
-			
+
 		return cls._cache[s]
-	
+
 	@staticmethod
 	def compile(s):
 		try:
@@ -57,7 +57,7 @@ class XPathBase(object):
 class XPath(XPathBase):
 	_max_cache = 100
 	_cache = {}
-	
+
 	@xpath.api
 	def findNodeset(self, context):
 		result = self.find(context)
@@ -90,7 +90,7 @@ class XPath(XPathBase):
 class Pattern(XPathBase):
 	_max_cache = 100
 	_cache = {}
-	
+
 	@staticmethod
 	def compile(s):
 		try:
@@ -99,18 +99,18 @@ class Pattern(XPathBase):
 		except xpath.yappsrt.SyntaxError, e:
 			raise xpath.exceptions.XPathParseError(str(s), e.pos, e.msg)
 		return expr
-		
+
 	@xpath.api
 	def nodes(self, context):
 		result = self.find(context)
 		if not xpath.expr.nodesetp(result):
 			raise XPathTypeError("expression is not a node-set")
 		return result
-		
+
 class AttributeTemplate(XPathBase):
 	_max_cache = 100
 	_cache = {}
-	
+
 	@staticmethod
 	def compile(s):
 		try:
@@ -119,7 +119,7 @@ class AttributeTemplate(XPathBase):
 		except xpath.yappsrt.SyntaxError, e:
 			raise xpath.exceptions.XPathParseError(str(s), e.pos, e.msg)
 		return expr
-		
+
 	@xpath.api
 	def value(self, context):
 		result = self.find(context)
@@ -128,5 +128,4 @@ class AttributeTemplate(XPathBase):
 				return None
 		result = xpath.tools.string(result, context)
 		return result
-		
-		
+

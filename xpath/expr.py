@@ -16,7 +16,7 @@ from axes import *
 
 def document_order(node):
     """Compute a document order value for the node.
-    
+
     cmp(document_order(a), document_order(b)) will return -1, 0, or 1 if
     a is before, identical to, or after b in the document respectively.
 
@@ -102,7 +102,7 @@ class OrExpr(BinaryOperatorExpr):
 
     def evaluate(self, node, pos, size, context):
         evaluateOp = lambda x: invoke('boolean', node, pos, size, context, x.evaluate(node, pos, size, context))
-        
+
         # Note that XPath boolean operations short-circuit.
         return (evaluateOp(self.left) or evaluateOp(self.right))
 
@@ -121,9 +121,9 @@ class EqualityExpr(BinaryOperatorExpr):
     def evaluate(self, node, pos, size, context):
         a = self.left.evaluate(node, pos, size, context)
         b = self.right.evaluate(node, pos, size, context)
-        
+
         return self.operateImpl(a, b, node, pos, size, context)
-            
+
     def operateImpl(self, a, b, node, pos, size, context):
         if nodesetp(a):
             for node in a:
@@ -136,7 +136,7 @@ class EqualityExpr(BinaryOperatorExpr):
                 if self.operateImpl(a, string_value(node), node, pos, size, context):
                     return True
             return False
-            
+
         if self.op in ('=', '!='):
             if booleanp(a) or booleanp(b):
                 convert = 'boolean'
@@ -246,19 +246,19 @@ class Function(Expr):
 
     def __init__(self, name, args):
         spl = name.split(':')
-        
+
         if len(spl) == 1:
             self.name = name
             self.prefix = None
         else:
             self.name = spl[1]
             self.prefix = spl[0]
-            
+
         self.args = args
-            
+
     def evaluate(self, node, pos, size, context):
         args = [x.evaluate(node, pos, size, context) for x in self.args]
-        
+
         if self.prefix is not None:
             try:
                 namespaceURI = context.namespaces[self.prefix]
@@ -267,7 +267,7 @@ class Function(Expr):
             name = (namespaceURI, self.name)
         else:
             name = self.name
-            
+
         return invoke(name, node, pos, size, context, *args)
 
     def __str__(self):
@@ -347,7 +347,7 @@ class PathExpr(Expr):
 
 class PredicateList(Expr):
     """A list of predicates.
-    
+
     Predicates are handled as an expression wrapping the expression
     filtered by the predicates.
 

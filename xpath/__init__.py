@@ -28,7 +28,7 @@ def api(f):
 
 class XPathContext(object):
     functions = functions.xpath_functions
-    
+
     def __init__(self, document=None, **kwargs):
         self.namespaces = {None:None}
         self.variables = {}

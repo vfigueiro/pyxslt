@@ -18,7 +18,7 @@ parser XPath:
     # Dire hack here, since yapps2 has only one token of lookahead: NCNAME
     # does not match when followed by a open paren.
     token NCNAME:   r'[a-zA-Z_][a-zA-Z0-9_\-\.\w]*(?!\()'
-    token FUNCNAME: r'[a-zA-Z_][a-zA-Z0-9_\-\.\w]*(?:\:[a-zA-Z_][a-zA-Z0-9_\-\.\w]*)?(?=\()' 
+    token FUNCNAME: r'[a-zA-Z_][a-zA-Z0-9_\-\.\w]*(?:\:[a-zA-Z_][a-zA-Z0-9_\-\.\w]*)?(?=\()'
 
     token DQUOTE:   r'\"(?:[^\"])*\"'
     token SQUOTE:   r"\'(?:[^\'])*\'"
@@ -263,7 +263,7 @@ parser XPath:
           '\|' LocationPathPattern      {{ Expr = X.UnionExpr('|', Expr, LocationPathPattern) }}
         )*
         END                             {{ return Expr }}
-        
+
     rule LocationPathPattern:
           r'\/'                         {{ path = None }}
           [
@@ -283,13 +283,13 @@ parser XPath:
                                         {{ RelativePathPattern.steps.append(expr) }}
                                         {{ expr = RelativePathPattern }}
           ]                             {{ return X.AbsolutePathExpr(expr) }}
-            
+
     rule IdKeyPattern:
           r'id' r'\(' Literal r'\)'     {{ return X.Function('id', [ Literal ]) }}
-        | r'key' 
+        | r'key'
           r'\(' Literal                 {{ arg1 = Literal }}
           r'\,' Literal r'\)'           {{ return X.Function('id', [ arg1, Literal ]) }}
-        
+
     rule RelativePathPattern:
         StepPattern                     {{ steps = [StepPattern] }}
         (
@@ -299,7 +299,7 @@ parser XPath:
           )
           StepPattern                   {{ steps.append(StepPattern) }}
         )*                              {{ return X.PathExpr(steps) }}
-        
+
     rule StepPattern:
         (
             AbbrevForwardStep           {{ step = AbbrevForwardStep }}
@@ -308,7 +308,7 @@ parser XPath:
         [
           PredicateList                 {{ expr = X.PredicateList(expr, PredicateList, step[0]) }}
         ]                               {{ return expr }}
-    
+
     rule ChildOrAttributeAxisStep:
         (
             'child'                     {{ axis = 'child' }}
@@ -316,7 +316,7 @@ parser XPath:
         )
         '::'
         NodeTest                        {{ return (axis, NodeTest) }}
-        
+
 # Attribute value templates
 
     rule AttributeValueTemplate:

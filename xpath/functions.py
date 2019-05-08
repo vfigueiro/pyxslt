@@ -20,7 +20,7 @@ def function(minargs, maxargs, implicit=False, first=False, convert=None, namesp
                 (e.g., string() and number().)
     convert -- When non-None, a function used to filter function arguments.
     """
-            
+
     def decorator(f):
         def new_f(node, pos, size, context, *args):
             if len(args) < new_f.minargs:
@@ -28,7 +28,7 @@ def function(minargs, maxargs, implicit=False, first=False, convert=None, namesp
             if (new_f.maxargs is not None and
                 len(args) > new_f.maxargs):
                 raise XPathTypeError, 'too many arguments for "%s()"' % new_f.__name__
-            
+
             if implicit and len(args) == 0:
                 args = [[node]]
 
@@ -39,21 +39,21 @@ def function(minargs, maxargs, implicit=False, first=False, convert=None, namesp
                     args[0] = args[0][0]
                 else:
                     args[0] = None
-                    
+
             if convert is not None:
                 if isinstance(convert, basestring):
                     cvt = lambda x: invoke(convert, node, pos, size, context, x)
                 else:
                     cvt = convert
                 args = [cvt(x) for x in args]
-                
+
             return f(node, pos, size, context, *args)
 
         new_f.minargs = minargs
         new_f.maxargs = maxargs
         new_f.__name__ = f.__name__
         new_f.__doc__ = f.__doc__
-        
+
         xpname = new_f.__name__[2:].replace('_', '-')
         if namespaceUri is not None:
             xpname = (namespaceUri, xpname)
@@ -61,9 +61,9 @@ def function(minargs, maxargs, implicit=False, first=False, convert=None, namesp
         if not hasattr(module, 'xpath_functions'):
             module.xpath_functions = {}
         module.xpath_functions[xpname] = new_f
-        
+
         return new_f
-        
+
     return decorator
 
 # Node Set Functions
@@ -124,7 +124,7 @@ def f_name(node, pos, size, context, argnode):
 @function(0, 1, implicit=True)
 def f_string(node, pos, size, context, v):
     """Convert a value to a string."""
-    
+
     if nodesetp(v):
         if not v:
             return u''
@@ -208,7 +208,7 @@ def f_translate(node, pos, size, context, s, source, target):
     # str.translate() and unicode.translate() are completely different.
     # The translate() arguments are coerced to unicode.
     s, source, target = map(unicode, (s, source, target))
-    
+
     table = {}
     for schar, tchar in izip(source, target):
         schar = ord(schar)
@@ -234,7 +234,7 @@ def f_boolean(node, pos, size, context, v):
         return True
     elif stringp(v):
         return v != ''
-        
+
     return v
 
 @function(1, 1, convert='boolean')
@@ -265,7 +265,7 @@ def f_lang(node, pos, size, context, s):
 @function(0, 1, implicit=True)
 def f_number(node, pos, size, context, v):
     """Convert a value to a number."""
-    
+
     if nodesetp(v):
         v = string(v, context)
     try:
@@ -290,4 +290,3 @@ def f_round(node, pos, size, context, n):
     # XXX round(-0.0) should be -0.0, not 0.0.
     # XXX round(-1.5) should be -1.0, not -2.0.
     return round(n)
-    
